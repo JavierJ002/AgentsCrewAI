@@ -197,21 +197,21 @@ class SportsAnalyticsAgents:
         )
 
 
-    def create_foda_analyst_agent(self) -> Agent:
+    def create_momentum_analyst_agent(self) -> Agent:
         return Agent(
-            role='Lead Soccer Strategist & FODA Analyst',
-            goal='To synthesize comprehensive team performance insights into a strategic FODA (Factors, Opportunities, Dangers, Advantages) report with actionable recommendations for a soccer club.',
+            role='Soccer Team Momentum Analyst',
+            goal=f'To assess the current momentum of {TARGET_TEAM_NAME} in the last {NUM_GAMES_TO_ANALYZE} based on recent team and individual player performances, providing a momentum score and detailed justification.',
             backstory=(
-                "A highly experienced soccer executive with a strategic mindset. "
-                "Possesses deep knowledge of squad management, transfer markets, "
-                "and competitive analysis in professional soccer. Excels at converting "
-                "detailed performance analytics into overarching strategic plans "
-                "for long-term club success, delivering clear and impactful strategic directives."
+                "A seasoned soccer strategist and performance evaluator with an intuitive understanding "
+                "of team dynamics and player form. Excels at synthesizing complex analytical reports "
+                "into a concise, actionable assessment of a team's current trajectory. Highly skilled "
+                "in identifying whether a team is building positive momentum, struggling, or maintaining "
+                "a steady state, crucial for coaching and management decisions."
             ),
-            tools=[], # Primarily uses reasoning and synthesis
+            tools=[], 
             llm=llm,
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False 
         )
 
 # --- 5. Task Definitions (using Classes for Organization) ---
@@ -354,44 +354,47 @@ class SportsAnalyticsTasks:
             context=[team_stats_json_str] # Expects the JSON string output from Team Statistician task
         )
 
-    def define_foda_task(self, team_analysis_md: str, agent: Agent) -> Task:
+    def define_momentum_analysis_task(self, team_analysis_md: str, agent: Agent) -> Task:
         return Task(
             description=(
-                f"**Objective**: Generate a comprehensive Soccer FODA (Factors, Opportunities, Dangers, Advantages) analysis and strategic recommendations for {TARGET_TEAM_NAME}, based on recent team performance.\n"
-                f"**Instructions**:\n"
-                f"1.  Review the provided 'Team Performance Analysis' Markdown report thoroughly.\n"
-                f"2.  Synthesize insights from the report to identify:\n"
-                f"    -   **F - Factors**: Current performance drivers, critical dependencies, systemic issues, and tactical approaches identified in the analyses.\n"
-                f"    -   **O - Opportunities**: Areas for exploitation, strategic advantages, and potential growth/improvement based on team strengths.\n"
-                f"    -   **D - Dangers**: Threats from opponents, internal weaknesses, potential negative trends.\n"
-                f"    -   **A - Advantages**: Unique strengths, consistent high-performing aspects, and clear competitive edges from team analyses.\n"
-                f"3.  Each point in F, O, D, A must be concise, impactful, and directly supported by evidence from the provided analyses (e.g., referencing specific statistics or trends from the input reports).\n"
-                f"4.  Formulate 3-5 concise, **actionable strategic recommendations** based on the FODA analysis, considering team aspects. Suggest specific tactical implementations or areas of training focus where possible.\n"
-                f"5.  **Prioritize**: Briefly identify the single most critical Factor, most promising Opportunity, most significant Danger, and most impactful Advantage.\n"
-                f"**Output Format Constraint**: Strict Markdown as specified, with clear headings, bullet points, and specific data references. The tone should be professional and suitable for a club's coaching staff or management."
+                f"**Objective**: Based on the provided 'Team Performance Analysis' and 'Player Performance Analysis' reports for {TARGET_TEAM_NAME} (last {NUM_GAMES_TO_ANALYZE} games), assess the team's current momentum.\n"
+                "**Instructions**:\n"
+                "1.  Review both Markdown reports thoroughly, focusing on recent trends, consistency, and key statistical indicators.\n"
+                "2.  **Evaluate Team Momentum**: Consider:\n"
+                "    -   Recent match results (wins, losses, draws, scorelines, comebacks, collapses).\n"
+                "    -   Overall offensive and defensive efficiency trends.\n"
+                "    -   Tactical effectiveness and adaptability.\n"
+                "    -   Team cohesion and apparent confidence.\n"
+                "3.  **Evaluate Player Momentum**: Consider:\n"
+                "    -   Form of key players (goal scorers, playmakers, defenders, goalkeeper).\n"
+                "    -   Consistency of individual performances.\n"
+                "    -   Impact of player strengths/weaknesses on overall team performance.\n"
+                "    -   Any notable individual slumps or surges.\n"
+                "4.  **Synthesize & Score**: Based on the combined analysis, assign a momentum score from 1 to 10 (10 being amazing momentum, 1 being a severe loss streak with poor performances).\n"
+                "5.  **Justify Score**: Provide a clear, concise justification for the assigned score, referencing specific points from both the team and player analyses to support your assessment.\n"
+                "**Output Format Constraint**: Strict Markdown as specified below."
             ),
             expected_output=(
-                f"A detailed Markdown report containing the FODA analysis and strategic recommendations.\n"
+                f"A Markdown report detailing the team's current momentum and score.\n"
                 f"```markdown\n"
-                f"### Soccer FODA Analysis for [Team Name - inferred from input] - Last {NUM_GAMES_TO_ANALYZE} Games\n\n"
-                f"**F - Factors (Current State & Influences):**\n"
-                f"- **Vulnerability to Counter-Attacks:** Despite dominant possession (Avg. Y%), the team concedes disproportionately from quick opponent transitions due to slow recovery and disorganized defensive shape after losing the ball. (Ref: Team Analysis)\n\n"
-                f"**O - Opportunities (Potential Gains):**\n"
-                f"- **Exploiting Opponent's Defensive Set-Piece Weakness:** Our team's aerial prowess (X headed goals in last {NUM_GAMES_TO_ANALYZE} games) combined with common opponent weaknesses defending corners presents a clear scoring opportunity. (Ref: Team Analysis)\n\n"
-                f"**D - Dangers (Potential Risks & Threats):**\n"
-                f"- **High Press Turnover Risk:** Team struggles with high pressing opposition, leading to a high number of turnovers in dangerous areas (Avg. Z turnovers/game). (Ref: Team Analysis)\n"
-                f"**A - Advantages (Strengths to Leverage):**\n"
-                f"- **Exceptional Goalkeeping:** Goalkeeper's high save percentage (X%) and crucial saves maintain competitive edge in tight matches. (Ref: Team Analysis)\n\n"
-                f"### Strategic Recommendations:\n"
-                f"1.  **Develop Press-Breaking Drills**: Implement specific training sessions focusing on quick decision-making, short passing combinations, and effective spatial awareness to nullify high-pressing tactics. **Tactical Implication**: Emphasize quick one-two passes and diagonal runs in congested areas.\n"
-                f"2.  **Optimize Set-Piece Routines**: Dedicate training time to perfecting offensive set-piece routines, particularly corners, to maximize the team's aerial advantage. **Tactical Implication**: Introduce new variations for corner kicks, targeting strong headers.\n"
-                f"\n### Top Priorities from FODA:\n"
-                f"- **Most Critical Factor:** Vulnerability to Counter-Attacks (F-1).\n"
-                f"- **Most Promising Opportunity:** Exploiting Opponent's Defensive Set-Piece Weakness (O-1).\n"
+                f"### Momentum Analysis for {TARGET_TEAM_NAME} - Last {NUM_GAMES_TO_ANALYZE} Games\n\n"
+                f"**Current Momentum Score: [X]/10**\n"
+                f"*(Where X is an integer from 1 to 10)*\n\n"
+                f"**Momentum Assessment:**\n"
+                f"The team is currently experiencing [positive/negative/mixed/stable] momentum due to the following factors:\n"
+                f"-   **Team Performance Indicators:**\n"
+                f"    -   [Summary of team's recent form, e.g., 'Consistent high possession (Avg. Y%) but struggling with defensive transitions (X goals conceded from Z opponent shots).']\n"
+                f"    -   [Reference to specific trends, e.g., 'Offensive output has been sporadic, with X goals in Y games.']\n"
+                f"-   **Key Player Performance Indicators:**\n"
+                f"    -   [Summary of key player form, e.g., 'Player A's goal-scoring form (X goals in Y games) is a major positive.']\n"
+                f"    -   [Reference to player struggles/consistency, e.g., 'However, Player B's defensive contributions (Avg. X tackles won) have been inconsistent.']\n"
+                f"-   **Recent Results & Trends:**\n"
+                f"    -   [Brief overview of recent match outcomes, e.g., 'A recent win streak of X matches suggests growing confidence.']\n"
+                f"    -   [Overall trajectory, e.g., 'The team appears to be on an upward trajectory, showing resilience in tight games.']\n"
                 f"```"
             ),
             agent=agent,
-            context=[team_analysis_md] # Only team analysis now
+            context=[team_analysis_md] 
         )
 
 # --- 6. Crew Definition and Execution ---
@@ -408,7 +411,7 @@ class SoccerAnalyticsCrew:
         self.extractor = self.agent_factory.create_extractor_agent()
         self.team_statistician = self.agent_factory.create_team_statistician_agent()
         self.team_performance_analyst = self.agent_factory.create_team_performance_analyst_agent()
-        self.foda_analyst = self.agent_factory.create_foda_analyst_agent()
+        self.momentum_analyst = self.agent_factory.create_momentum_analyst_agent()
 
     def run_crew(self):
         # Define Tasks
@@ -434,9 +437,9 @@ class SoccerAnalyticsCrew:
             agent=self.team_performance_analyst
         )
 
-        foda_analysis_task = self.task_factory.define_foda_task(
+        momentum_analysis_task = self.task_factory.define_momentum_analysis_task(
             team_analysis_md=team_performance_analysis_task,
-            agent=self.foda_analyst
+            agent=self.momentum_analyst 
         )
 
         # Instantiate Crew with hierarchical process
@@ -445,14 +448,14 @@ class SoccerAnalyticsCrew:
                 self.extractor,
                 self.team_statistician,
                 self.team_performance_analyst,
-                self.foda_analyst
+                self.momentum_analyst
             ],
             tasks=[
                 get_team_id_task,
                 extract_game_data_task,
                 team_statistician_task,
                 team_performance_analysis_task,
-                foda_analysis_task
+                momentum_analysis_task
             ],
             process=Process.hierarchical, 
             manager_llm=llm, 
